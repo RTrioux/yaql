@@ -28,7 +28,7 @@ Quat::Quat(double q0, Vector3D im)
     m_arr[0] = q0;
     for (size_t i = 0; i < 3; i++)
     {
-        m_arr[i+1] = im[0];
+        m_arr[i+1] = im[i];
     }
     m_im = im;
 }
@@ -247,14 +247,25 @@ double Quat::getRotation(Quat const & q)
 
 Quat Quat::unitQuat(double angle, double x, double y, double z)
 {
-    double q0 = cos(angle/2);
-    return Quat(q0,x,y,z);
+    return unitQuat(angle, Vector3D(x,y,z));
 }
 
 Quat Quat::unitQuat(double angle, Vector3D im)
 {
-    double q0 = cos(angle/2);
-    return Quat(q0,im);
+    if(angle == 0)
+    {
+        return Quat(1,0,0,0);
+    }
+    else
+    {
+        double q0 = cos(angle/2);
+        if(angle<0)
+        {
+            im = -im;
+        }
+        double lambda = sqrt((1 - q0*q0)/im.norm2());
+        return Quat(q0,lambda*im);
+    }
 }
 
 Vector3D Quat::rotateVector(Vector3D const & vec) const

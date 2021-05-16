@@ -165,9 +165,23 @@ Vector3D Vector3D::normalize(Vector3D const  & vect)
 
 double Vector3D::norm() const
 {
-    return sqrt(innerProd(*this,*this));
+    return sqrt(norm2());
 }
 
+double Vector3D::norm(Vector3D const & vec)
+{
+    return vec.norm();
+}
+
+double Vector3D::norm2() const
+{
+    return innerProd(*this,*this);
+}
+
+double Vector3D::norm2(Vector3D const & vec)
+{
+    return  vec.norm2();
+}
 
 /** Display **/
 

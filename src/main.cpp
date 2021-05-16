@@ -1,14 +1,13 @@
 #include <iostream>
+#include <math.h>
 #include "quat.hpp"
 using namespace std;
 
 int main()
 {
-    Quat q1(0.2,2,3,7);
-    Quat q2(0.5,11,13,17); 
-    Quat q3 = q1+q2;
-    
-    cout<<q3<<endl;
+    Quat q1 = Quat::unitQuat(M_PI_4,0,1,0);
+    cout<<q1.rotateVector(Vector3D(1,0,0))<<endl;
+    cout<<q1<<endl;
     cout<<q1.re()<<endl;
     return 0;
 }

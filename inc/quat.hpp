@@ -58,6 +58,7 @@ class Quat
     static double getRotation(Quat const &);
 
     // Unit quaternions
+    //Quat unitQuat() const; // Convert the quaternion into a unit quaternion while keeping the rotation angle correct
     static Quat unitQuat(double angle, double x, double y, double z);
     static Quat unitQuat(double angle, Vector3D im);
 
@@ -70,8 +71,6 @@ class Quat
 
     /** Display **/
     void print() const;
-
-
     
     private:
     double m_arr[4];

@@ -36,7 +36,9 @@ class Vector3D
     Vector3D normalize() const;
     static  Vector3D normalize(Vector3D const &);
     double norm() const;
-    static const double norm(Vector3D const &);
+    static double norm(Vector3D const &);
+    double norm2() const;
+    static double norm2(Vector3D const &);
 
     /** Display **/
     void print() const;
