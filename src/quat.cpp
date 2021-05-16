@@ -28,7 +28,7 @@ Quat::Quat(double q0, Vector3D im)
     m_arr[0] = q0;
     for (size_t i = 0; i < 3; i++)
     {
-        m_arr[i+1] = im[0];
+        m_arr[i+1] = im[i];
     }
     m_im = im;
 }

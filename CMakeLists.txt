@@ -11,15 +11,19 @@ include_directories(inc)
 
 file(GLOB SOURCES "src/*.cpp")
 
-#add_library(ginac SHARED IMPORTED)
-#set(IMPORTED_LOCATION /usr/lib)
-
-
-#message(STATUS "PROJECT_NAME =" ${PROJECT_NAME})
-#message(STATUS "Sources =" ${SOURCES})
-#message(STATUS "IMPORTED_LOCATION =" ${IMPORTED_LOCATION})
-#message(STATUS "ROOT =" ${ROOT})
-
 add_executable(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
+# Gtest related
+file(GLOB TEST_SOURCES "test/src/*.cpp")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test/lib")
+add_library(${PROJECT_NAME}_lib STATIC src/quat.cpp src/vector3d.cpp)
+add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
+set_target_properties(${PROJECT_NAME}_test PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_test)
+# If gtest installed on the system
+target_link_libraries(${PROJECT_NAME}_test PUBLIC ${PROJECT_NAME}_lib gtest)
+# else
+# ??? gtest should be cloned, compiled
+set_target_properties(${PROJECT_NAME}_test PROPERTIES EXCLUDE_FROM_ALL 1)
+
+#add_subdirectory(test)
