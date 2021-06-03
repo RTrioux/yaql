@@ -108,6 +108,30 @@ Quat Quat::operator/(Quat const & q) const
     return (*this) * inverse(q);
 }
 
+Quat & Quat::operator+=(Quat const &q)
+{
+    *this = *this + q;
+    return *this;
+}
+
+Quat & Quat::operator-=(Quat const & q)
+{
+    *this = *this - q;
+    return *this;
+}
+
+Quat & Quat::operator*=(Quat const & q)
+{
+    *this = *this * q; 
+    return *this;
+}
+
+Quat & Quat::operator/=(Quat const & q)
+{
+    *this = *this / q;
+    return *this;
+}
+
 bool Quat::operator!=(Quat const & q) const
 {
     return !this->isEqual(q);
@@ -280,7 +304,141 @@ Vector3D Quat::rotateVector(Quat const & q, Vector3D const & vec)
     return q.rotateVector(vec);
 }
 
+/** Conversions **/
 
+array<double,3> Quat::toEuler(Sequence seq)
+{
+    double q0 = m_arr[0],
+           q1 = m_arr[1],
+           q2 = m_arr[2],
+           q3 = m_arr[3];
+    double a = 1 - 2*(q2*q2 + q3*q3),
+           b =     2*(q1*q2 - q3*q0),
+           c =     2*(q1*q3 + q2*q0),
+           d =     2*(q1*q2 + q3*q0),
+           e = 1 - 2*(q1*q1 + q3*q3),
+           f =     2*(q2*q3 - q1*q0),
+           g =     2*(q1*q3 - q2*q0),
+           h =     2*(q2*q3 + q1*q0),
+           i = 1 - 2*(q1*q1 + q2*q2);
+    array<double,3> euler;
+
+    switch (seq)
+    {
+    case XYX:
+        euler[0] = -atan2(d,g);
+        euler[1] = acos(a);
+        euler[2] = atan2(b,c);
+    break;
+    case XYZ:
+        euler[0] = -atan2(f,i);
+        euler[1] = asin(c);
+        euler[2] = -atan2(b,a);
+    break;
+    case XZX:
+        euler[0] = atan2(g,d);
+        euler[1] = acos(a);
+        euler[2] = -atan2(c,b);
+    break;
+    case XZY:
+        euler[0] = atan2(h,e);
+        euler[1] = -asin(b);
+        euler[2] = atan2(c,a);
+    break;
+    case YXY:
+        euler[0] = atan2(b,h);
+        euler[1] = acos(e);
+        euler[2] = -atan2(d,f);
+    break;
+    case YXZ:
+        euler[0] = atan2(c,i);
+        euler[1] = -asin(f);
+        euler[2] = atan2(d,e);
+    break;
+    case YZX:
+        euler[0] = -atan2(g,a);
+        euler[1] = asin(d);
+        euler[2] = -atan2(f,e);
+    break;
+    case YZY:
+        euler[0] = -atan2(h,b);
+        euler[1] = acos(e);
+        euler[2] = atan2(f,d);
+    break;
+    case ZXY:
+        euler[0] = -atan2(b,e);
+        euler[1] = asin(h);
+        euler[2] = -atan2(g,i);
+    break;
+    case ZXZ:
+        euler[0] = -atan2(c,f);
+        euler[1] = acos(i);
+        euler[2] = atan2(g,h);
+    break;
+    case ZYX:
+        euler[0] = atan2(d,a);
+        euler[1] = -asin(g);
+        euler[2] = atan2(h,i);
+    break;
+    case ZYZ:
+        euler[0] = atan2(f,c);
+        euler[1] = acos(i);
+        euler[2] = -atan2(h,g);
+    break;
+    default:
+        throw invalid_argument("Not a correct sequence");
+    break;
+    }
+    return euler;
+}
+
+std::array<double,3> Quat::toEuler(Quat const & q, Sequence seq)
+{
+    return q.toEuler(seq);
+}
+
+Quat Quat::fromEuler(array<double,3> euler, Sequence seq)
+{
+    static map<Sequence, string> seq2str = {{XYX,"XYX"},{XYZ,"XYZ"},{XZX,"XZX"},{XZY,"XZY"},
+                                            {YXY,"YXY"},{YXZ,"YXZ"},{YZX,"YZX"},{YZY,"YZY"},
+                                            {ZXY,"ZXY"},{ZXZ,"ZXZ"},{ZYX,"ZYX"},{ZYZ,"ZYZ"}};
+
+    string strSeq = seq2str[seq];
+    
+    Quat Q[3];
+    Quat Qresult = Quat(1,0,0,0);
+    int i=0;
+    for(char c: strSeq)
+    {
+        switch (c)
+        {
+        case 'X':
+            Q[i] = Quat(cos(euler[i]/2),sin(euler[i]/2),0,0);
+        break;
+        case 'Y':
+            Q[i] = Quat(cos(euler[i]/2),0,sin(euler[i]/2),0);
+        break;
+        case 'Z':
+            Q[i] = Quat(cos(euler[i]/2),0,0,sin(euler[i]/2));
+        break;
+        }
+        Qresult *= Q[i];
+        i++;
+    }
+    return Qresult;
+}
+
+Quat Quat::fromEuler(double euler[3], Sequence seq)
+{
+    array<double,3> arr = {euler[0],euler[1],euler[2]};
+    return Quat::fromEuler(arr,seq);
+}
+
+Quat Quat::fromEuler(double alpha, double beta, double gamma, Sequence seq)
+{
+    array<double,3> arr = {alpha, beta, gamma};
+    return Quat::fromEuler(arr, seq);
+}
 /** Display **/
 
 void Quat::print() const

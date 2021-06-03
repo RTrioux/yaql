@@ -4,6 +4,14 @@
 using namespace std;
 
 
+Vector3D::Vector3D(array<double,3> arr)
+{
+    for (size_t i = 0; i < 3; i++)
+    {
+        m_arr[i] = arr[i];
+    }
+}
+
 Vector3D::Vector3D(double x,double y,double z)
 {
     m_arr[0]=x;

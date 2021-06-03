@@ -1,6 +1,8 @@
 #ifndef QUAT_HPP
 #define QUAT_HPP
 #include <iostream>
+#include <array>
+#include <map>
 #include "vector3d.hpp"
 
 class Quat
@@ -10,6 +12,8 @@ class Quat
     Quat(double arr[4]);
     Quat(double q0,Vector3D im);
     virtual ~Quat(){}
+
+    enum Sequence {XYX, XYZ, XZX, XZY, YXY, YXZ, YZX, YZY, ZXY, ZXZ, ZYX, ZYZ};
 
     /** Tests **/
     bool isEqual(Quat const &) const;
@@ -24,6 +28,10 @@ class Quat
     Quat operator-() const;
     Quat operator*(Quat const &) const;
     Quat operator/(Quat const &) const;
+    Quat &operator+=(Quat const &);
+    Quat &operator-=(Quat const &);
+    Quat &operator*=(Quat const &);
+    Quat &operator/=(Quat const &);
     bool operator==(Quat const &) const;
     bool operator!=(Quat const &) const;
     double & operator[](size_t index);
@@ -67,7 +75,12 @@ class Quat
 
     /** Conversions **/
     //Quat fromEuler(double ypr[3]);
-    //double * toEuler();
+    std::array<double,3> toEuler(Sequence seq = ZYX); // YPR as default sequence
+    static std::array<double,3> toEuler(Quat const & q, Sequence seq =ZYX);
+
+    static Quat fromEuler(std::array<double,3> euler, Sequence seq = ZYX);
+    static Quat fromEuler(double euler[3], Sequence seq = ZYX);
+    static Quat fromEuler(double alpha, double beta, double gamma, Sequence seq = ZYX);
 
     /** Display **/
     void print() const;

@@ -1,10 +1,12 @@
 #ifndef VECTOR3D_HPP
 #define VECTOR3D_HPP
 #include <iostream>
+#include <array>
 
 class Vector3D
 {
     public:
+    Vector3D(std::array<double,3> arr);
     Vector3D(double x=0,double y=0,double z=0);
     Vector3D(double arr[3]);
     virtual ~Vector3D(){}
