@@ -306,12 +306,45 @@ Vector3D Quat::rotateVector(Quat const & q, Vector3D const & vec)
 
 /** Conversions **/
 
-array<double,3> Quat::toEuler(Sequence seq)
+Vector3D Quat::toEuler(Sequence seq, bool degree, bool isExtrinsic) const
 {
-    double q0 = m_arr[0],
-           q1 = m_arr[1],
-           q2 = m_arr[2],
-           q3 = m_arr[3];
+    /** 
+     * Compute the coefficients (a,b,c,...i) of the rotation matrix (R_q) associated to an
+     * arbitrary unitary quaternion (q0,q1,q2,q3).
+     * Compute the rotation matrix R_xxx for Euler angles (alpha, beta, gamma).
+     * Solve alpha, beta, gamma such that R_xxx = R_q for the selected sequence xxx.
+     * 
+     * The 12 equations are solved offline thanks to wxmaxima and hardcoded here.
+     * 
+     * IMPORTANT: The intrinsic convention is used to compute the rotation matrices 
+     *            (See: https://www.wikiwand.com/en/Davenport_chained_rotations#)
+     * IMPORTANT: This function assume that the quaternion is already normalized.
+     *            Therefore, we don't force the normalization in order to gain performance.
+     **/
+
+    static map<Sequence, string> seq2str = {{XYX,"XYX"},{XYZ,"XYZ"},{XZX,"XZX"},{XZY,"XZY"},
+                                            {YXY,"YXY"},{YXZ,"YXZ"},{YZX,"YZX"},{YZY,"YZY"},
+                                            {ZXY,"ZXY"},{ZXZ,"ZXZ"},{ZYX,"ZYX"},{ZYZ,"ZYZ"}};
+    string strSeq = seq2str[seq];
+
+    Quat Q = *this;
+    // Check if the quaternion is a valid rotation
+    if(norm2() > 1)
+    {
+        if(-1 <= Q[0] && Q[0] <= 1)
+        {
+            Q = unitQuat(2*acos(Q[0]),Q.im());
+        }
+        else
+        {
+            throw domain_error("This quaternion is not a valid rotation (q0 must satisifies -1 < q0 < 1)");
+        }
+    }
+
+    double q0 = Q[0],
+           q1 = Q[1],
+           q2 = Q[2],
+           q3 = Q[3];
     double a = 1 - 2*(q2*q2 + q3*q3),
            b =     2*(q1*q2 - q3*q0),
            c =     2*(q1*q3 + q2*q0),
@@ -321,24 +354,24 @@ array<double,3> Quat::toEuler(Sequence seq)
            g =     2*(q1*q3 - q2*q0),
            h =     2*(q2*q3 + q1*q0),
            i = 1 - 2*(q1*q1 + q2*q2);
-    array<double,3> euler;
+    Vector3D euler;
 
     switch (seq)
     {
     case XYX:
-        euler[0] = -atan2(d,g);
+        euler[0] = atan2(d,-g);
         euler[1] = acos(a);
         euler[2] = atan2(b,c);
     break;
     case XYZ:
-        euler[0] = -atan2(f,i);
+        euler[0] = atan2(-f,i);
         euler[1] = asin(c);
-        euler[2] = -atan2(b,a);
+        euler[2] = atan2(-b,a);
     break;
     case XZX:
         euler[0] = atan2(g,d);
         euler[1] = acos(a);
-        euler[2] = -atan2(c,b);
+        euler[2] = atan2(c,-b);
     break;
     case XZY:
         euler[0] = atan2(h,e);
@@ -348,7 +381,7 @@ array<double,3> Quat::toEuler(Sequence seq)
     case YXY:
         euler[0] = atan2(b,h);
         euler[1] = acos(e);
-        euler[2] = -atan2(d,f);
+        euler[2] = atan2(d,-f);
     break;
     case YXZ:
         euler[0] = atan2(c,i);
@@ -356,22 +389,22 @@ array<double,3> Quat::toEuler(Sequence seq)
         euler[2] = atan2(d,e);
     break;
     case YZX:
-        euler[0] = -atan2(g,a);
+        euler[0] = atan2(-g,a);
         euler[1] = asin(d);
-        euler[2] = -atan2(f,e);
+        euler[2] = atan2(-f,e);
     break;
     case YZY:
-        euler[0] = -atan2(h,b);
+        euler[0] = atan2(h,-b);
         euler[1] = acos(e);
         euler[2] = atan2(f,d);
     break;
     case ZXY:
-        euler[0] = -atan2(b,e);
+        euler[0] = atan2(-b,e);
         euler[1] = asin(h);
-        euler[2] = -atan2(g,i);
+        euler[2] = atan2(-g,i);
     break;
     case ZXZ:
-        euler[0] = -atan2(c,f);
+        euler[0] = atan2(c,-f);
         euler[1] = acos(i);
         euler[2] = atan2(g,h);
     break;
@@ -383,28 +416,88 @@ array<double,3> Quat::toEuler(Sequence seq)
     case ZYZ:
         euler[0] = atan2(f,c);
         euler[1] = acos(i);
-        euler[2] = -atan2(h,g);
+        euler[2] = atan2(h,-g);
     break;
     default:
         throw invalid_argument("Not a correct sequence");
     break;
     }
+
+
+    /* Gimbal lock check */
+    double eps = 1e-7;
+
+    if (abs(euler[1]) < eps || abs(euler[1] - M_PI) < eps)
+    {
+        // Ensure that the third angle is 0 after swapping 0 & 2
+        if(isExtrinsic)
+        {
+            if(strSeq[0] != 'Y')
+            {
+                euler[2] = acos(e);
+            }
+            else
+            {
+                euler[2] = acos(a);
+            }
+            euler[0] = 0;
+        }
+        else
+        {
+            if(strSeq[0] != 'Y')
+            {
+                euler[0] = acos(e);
+            }
+            else
+            {
+                euler[0] = acos(a);
+            }
+            euler[2] = 0;
+        }
+        cout<<"WARNING: Gimbal locked: Third angle has been set to 0" << endl;
+    }
+
+    if (isExtrinsic)
+    {
+        double temp = euler[0];
+        euler[0] = euler[2];
+        euler[2] = temp; 
+    }
+
+    if(degree)
+    {
+        for (size_t i = 0; i < 3; i++)
+        {
+            euler[i]*=180.0/M_PI;
+        }
+    }
     return euler;
 }
 
-std::array<double,3> Quat::toEuler(Quat const & q, Sequence seq)
+Vector3D Quat::toEuler(Quat const & q, Sequence seq, bool degree, bool isExtrinsic)
 {
-    return q.toEuler(seq);
+    return q.toEuler(seq, degree, isExtrinsic);
 }
 
-Quat Quat::fromEuler(array<double,3> euler, Sequence seq)
+Quat Quat::fromEuler(array<double,3> euler, Sequence seq, bool degree, bool isExtrinsic)
 {
+    /** 
+     * https://handwiki.org/wiki/Rotation_formalisms_in_three_dimensions
+    **/
     static map<Sequence, string> seq2str = {{XYX,"XYX"},{XYZ,"XYZ"},{XZX,"XZX"},{XZY,"XZY"},
                                             {YXY,"YXY"},{YXZ,"YXZ"},{YZX,"YZX"},{YZY,"YZY"},
                                             {ZXY,"ZXY"},{ZXZ,"ZXZ"},{ZYX,"ZYX"},{ZYZ,"ZYZ"}};
 
     string strSeq = seq2str[seq];
-    
+
+    if(degree)
+    {
+        for (size_t i = 0; i < 3; i++)
+        {
+            euler[i] *= 180/M_PI;
+        }
+    }
+
     Quat Q[3];
     Quat Qresult = Quat(1,0,0,0);
     int i=0;
@@ -422,22 +515,36 @@ Quat Quat::fromEuler(array<double,3> euler, Sequence seq)
             Q[i] = Quat(cos(euler[i]/2),0,0,sin(euler[i]/2));
         break;
         }
-        Qresult *= Q[i];
+        if(isExtrinsic)
+        {
+            Qresult = Q[i] * Qresult;
+        }
+        else
+        {
+            Qresult = Qresult * Q[i];
+        }
         i++;
     }
+
     return Qresult;
 }
 
-Quat Quat::fromEuler(double euler[3], Sequence seq)
+Quat Quat::fromEuler(double euler[3], Sequence seq, bool degree, bool isExtrinsic)
 {
     array<double,3> arr = {euler[0],euler[1],euler[2]};
-    return Quat::fromEuler(arr,seq);
+    return Quat::fromEuler(arr,seq, degree, isExtrinsic);
 }
 
-Quat Quat::fromEuler(double alpha, double beta, double gamma, Sequence seq)
+Quat Quat::fromEuler(double alpha, double beta, double gamma, Sequence seq, bool degree, bool isExtrinsic)
 {
     array<double,3> arr = {alpha, beta, gamma};
-    return Quat::fromEuler(arr, seq);
+    return Quat::fromEuler(arr, seq, degree, isExtrinsic);
+}
+
+Quat Quat::fromEuler(Vector3D euler, Sequence seq, bool degree, bool isExtrinsic)
+{
+    array<double,3> arr = {euler[0],euler[1],euler[2]};
+    return Quat::fromEuler(arr, seq, degree, isExtrinsic);
 }
 /** Display **/
 

@@ -13,6 +13,10 @@ class Quat
     Quat(double q0,Vector3D im);
     virtual ~Quat(){}
 
+    /** Intrinsic sequences:
+     *  XYZ means first rotate around X0 then Y1 then Z2.
+     *  where B0 is the world (static base), B1 the first relative base ...
+    **/
     enum Sequence {XYX, XYZ, XZX, XZY, YXY, YXZ, YZX, YZY, ZXY, ZXZ, ZYX, ZYZ};
 
     /** Tests **/
@@ -75,12 +79,13 @@ class Quat
 
     /** Conversions **/
     //Quat fromEuler(double ypr[3]);
-    std::array<double,3> toEuler(Sequence seq = ZYX); // YPR as default sequence
-    static std::array<double,3> toEuler(Quat const & q, Sequence seq =ZYX);
+    Vector3D toEuler(Sequence seq = ZYX, bool degree = false, bool isExtrinsic = false) const; // YPR as default sequence
+    static Vector3D toEuler(Quat const & q, Sequence seq =ZYX, bool degree = false, bool isExtrinsic = false);
 
-    static Quat fromEuler(std::array<double,3> euler, Sequence seq = ZYX);
-    static Quat fromEuler(double euler[3], Sequence seq = ZYX);
-    static Quat fromEuler(double alpha, double beta, double gamma, Sequence seq = ZYX);
+    static Quat fromEuler(std::array<double,3> euler, Sequence seq = ZYX, bool degree = false, bool isExtrinsic = false);
+    static Quat fromEuler(double euler[3], Sequence seq = ZYX, bool degree = false, bool isExtrinsic = false);
+    static Quat fromEuler(double alpha, double beta, double gamma, Sequence seq = ZYX, bool degree = false, bool isExtrinsic = false);
+    static Quat fromEuler(Vector3D euler, Sequence seq = ZYX, bool degree = false, bool isExtrinsic = false);
 
     /** Display **/
     void print() const;
