@@ -5,21 +5,18 @@ using namespace std;
 
 int main()
 {
-    Quat q1 = Quat::unitQuat(M_PI_2,1,1,0);
-    Quat::Sequence seq = Quat::XYZ;
+    bool extrinsic = true;
+    Quat q1 = Quat::unitQuat(0.3,70,-20,33);
+    Quat::Sequence seq = Quat::XYX;
 
-    Vector3D euler = Vector3D(q1.toEuler(seq));
-    Quat qFromEuler = Quat::fromEuler(euler,seq);
-    Vector3D toEuler = Vector3D(qFromEuler.toEuler(seq)); 
+    Vector3D euler = Vector3D(q1.toEuler(seq,false,extrinsic));
+    Quat qFromEuler = Quat::fromEuler(euler,seq,false,extrinsic);
+    Vector3D toEuler = Vector3D(qFromEuler.toEuler(seq,false,extrinsic)); 
 
     cout<<q1<<endl;
     cout<<euler<<endl;
     cout<<qFromEuler<<endl;
-    cout<<toEuler<<endl<<endl;
+    cout<<toEuler<<endl;
 
-    //cout<<Quat::fromEuler(-0.92752418,0.15945954,1.28677213,seq)<<endl;
-
-    cout<<q1.rotateVector(Vector3D(0,1,0))<<endl;
-    cout<<qFromEuler.rotateVector(Vector3D(0,1,0))<<endl;
     return 0;
 }

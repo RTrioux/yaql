@@ -13,9 +13,14 @@ class Quat
     Quat(double q0,Vector3D im);
     virtual ~Quat(){}
 
-    /** Intrinsic sequences:
+    /** Rotation sequences:
+     *  In intrinsic convention (default), it rotates around a new base intermediate base every time
      *  XYZ means first rotate around X0 then Y1 then Z2.
-     *  where B0 is the world (static base), B1 the first relative base ...
+     *  where B0 is the world (static base), B1 the first relative base and B2 the final base.
+     * 
+     * In extrinsic convention, the rotation is always done with respect to the static base B0.
+     * /!\ The rotation order is inversed /!\
+     * XYZ means first rotation around Z0, then around Y0 and finaly around X0. 
     **/
     enum Sequence {XYX, XYZ, XZX, XZY, YXY, YXZ, YZX, YZY, ZXY, ZXZ, ZYX, ZYZ};
 

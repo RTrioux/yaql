@@ -498,6 +498,13 @@ Quat Quat::fromEuler(array<double,3> euler, Sequence seq, bool degree, bool isEx
         }
     }
 
+    if(isExtrinsic)
+    {
+        double temp = euler[0];
+        euler[0] = euler[2];
+        euler[2] = temp;
+    }
+
     Quat Q[3];
     Quat Qresult = Quat(1,0,0,0);
     int i=0;
@@ -515,6 +522,7 @@ Quat Quat::fromEuler(array<double,3> euler, Sequence seq, bool degree, bool isEx
             Q[i] = Quat(cos(euler[i]/2),0,0,sin(euler[i]/2));
         break;
         }
+        /*
         if(isExtrinsic)
         {
             Qresult = Q[i] * Qresult;
@@ -523,6 +531,8 @@ Quat Quat::fromEuler(array<double,3> euler, Sequence seq, bool degree, bool isEx
         {
             Qresult = Qresult * Q[i];
         }
+        */
+        Qresult = Qresult * Q[i];
         i++;
     }
 
