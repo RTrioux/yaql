@@ -1,5 +1,6 @@
 #include <iostream>
 #include <math.h>
+#include <array>
 #include "quat.hpp"
 using namespace std;
 
@@ -23,6 +24,7 @@ Quat::Quat(double arr[4])
     m_im = Vector3D(arr[1],arr[2],arr[3]);
 }
 
+
 Quat::Quat(double q0, Vector3D im)
 {
     m_arr[0] = q0;
@@ -32,6 +34,16 @@ Quat::Quat(double q0, Vector3D im)
     }
     m_im = im;
 }
+
+Quat::Quat(array<double,4> arr)
+{
+    for (size_t i = 0; i < 4; i++)
+    {
+        m_arr[i] = arr[i];
+    }
+    m_im = Vector3D(arr[1],arr[2],arr[3]);
+}
+
 
 /** Tests **/
 
@@ -269,12 +281,12 @@ double Quat::getRotation(Quat const & q)
 
 // Unit quaternion
 
-Quat Quat::unitQuat(double angle, double x, double y, double z)
+Quat Quat::unitQuat(double angle, double x, double y, double z, bool degree)
 {
     return unitQuat(angle, Vector3D(x,y,z));
 }
 
-Quat Quat::unitQuat(double angle, Vector3D im)
+Quat Quat::unitQuat(double angle, Vector3D im, bool degree)
 {
     if(angle == 0)
     {
@@ -282,7 +294,13 @@ Quat Quat::unitQuat(double angle, Vector3D im)
     }
     else
     {
+        if(degree)
+        {
+            angle *= 180.0 / M_PI;
+        }
+
         double q0 = cos(angle/2);
+        // Change direction in case of negative angle
         if(angle<0)
         {
             im = -im;
@@ -302,6 +320,16 @@ Vector3D Quat::rotateVector(Vector3D const & vec) const
 Vector3D Quat::rotateVector(Quat const & q, Vector3D const & vec)
 {
     return q.rotateVector(vec);
+}
+
+Vector3D Quat::rotateVector(double arr[3]) const
+{
+    return this->rotateVector(Vector3D(arr[0],arr[1],arr[2]));
+}
+
+Vector3D Quat::rotateVector(Quat const & q, double arr[3])
+{
+    return q.rotateVector(arr);
 }
 
 /** Conversions **/
@@ -494,7 +522,7 @@ Quat Quat::fromEuler(array<double,3> euler, Sequence seq, bool degree, bool isEx
     {
         for (size_t i = 0; i < 3; i++)
         {
-            euler[i] *= 180/M_PI;
+            euler[i] *= M_PI/180.0;
         }
     }
 

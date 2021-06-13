@@ -11,6 +11,7 @@ class Quat
     Quat(double q0=0, double q1=0, double q2=0, double q3=0);
     Quat(double arr[4]);
     Quat(double q0,Vector3D im);
+    Quat(std::array<double,4> arr);
     virtual ~Quat(){}
 
     /** Rotation sequences:
@@ -76,11 +77,13 @@ class Quat
 
     // Unit quaternions
     //Quat unitQuat() const; // Convert the quaternion into a unit quaternion while keeping the rotation angle correct
-    static Quat unitQuat(double angle, double x, double y, double z);
-    static Quat unitQuat(double angle, Vector3D im);
+    static Quat unitQuat(double angle, double x, double y, double z, bool degree = false);
+    static Quat unitQuat(double angle, Vector3D im, bool degree = false);
 
     Vector3D rotateVector(Vector3D const &) const;
     static Vector3D rotateVector(Quat const &, Vector3D const &);
+    Vector3D rotateVector(double [3]) const;
+    static Vector3D rotateVector(Quat const &, double [3]);
 
     /** Conversions **/
     //Quat fromEuler(double ypr[3]);
