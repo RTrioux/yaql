@@ -11,27 +11,80 @@ yaql also provide a `Vector3D` class with overloaded arithmetic operators that y
 ## Create a quaternion
 One can simply instantiate quaternions.
 
-![Quat](./images/Quat.png)
+```cpp
+    /** Create a quaternion **/
+    /* (double q0, double q1 , double q2,double q3) i.e (w, x, y, z) */ 
+    Quat Q0 = Quat(1, 2, 3, 4); // 1 + 2.i + 3.j + 4.k 
+
+    /* (double arr[4]) */
+    double arr[4] = {1, 2, 3, 4};
+    Quat Q1 = Quat(arr);
+
+    /* (double real, Vector3D im) */
+    Quat Q2 = Quat(1, Vector3D(2, 3, 4));
+```
 
 One can create unitary quaternions from angle/axis argument from `unitQuat`.
 This function yield a normalized quaternion with respect to the specified angle, hence q0 is always equal to cos(angle/2),
 then the imaginary part is adjusted such that the norm is unitary. (angle = 0 => Q = (1,0,0,0)).
 
-![unitQuat](./images/unitQuat.png)
+```cpp
+    /** Create a unit quaternion describing a rotation `angle` along a given axis **/
+    /* (double angle, double x, double y, double z, bool degree = false) */
+    Quat Uq1 = Quat::unitQuat(M_PI_4, 1, 0, 0); // Rotation of Pi/4 rad about X axis 
+    Quat Uq2 = Quat::unitQuat(45, 1, 0, 0, true); // Rotation of 45° about X axis 
+
+    /* (double real, Vector3D im, bool degree = false) */
+    Quat Uq3 = Quat::unitQuat(M_PI_4, Vector3D(1, 0, 0));
+    Quat Uq4 = Quat::unitQuat(45, Vector3D(1, 0, 0), true);
+```
 
 See **Euler <=> Quaternion conversion** section for creating quaternion from Euler angles
 ## Arithmetic operation on quaternions
 Most arithmetics operators have been overloaded.
 `>>` works with std::cout, you can then print result directly in the standard output. 
 
-![Arithmetics](./images/arithmetics.png)
+```cpp
+    /** Quaternion arithmetic operations **/
+    Q0 = Quat(2,0,0,0);
+    Q1 = Quat(0,1,0,0);
+    cout << Q0 * Q1 << endl; // >> (0, 2, 0, 0)
+
+    Q0 = Quat(0,1,0,0);
+    Q1 = Quat(0,1,2,3);
+    cout << Q0 * Q1 << endl; // >> (-1, 0, -3, 2)
+
+    Q0 = Quat(1,2,3,4);
+    Q1 = Quat(0,1,0,0);
+    cout << Q0 / Q0 << endl; // = Q0 * conj(Q0) / ||Q0||² >> (1, 0, 0, 0)
+    cout << Q0 / Q1 << endl; // = Q0 * conj(Q1) / ||Q1||² >> (2, -1 ,-4 , 3)
+
+    Q0 = Quat(1,2,3,4);
+    Q1 = Quat(1,1,1,1);
+    cout << Q0 + Q1 << endl; // >> (2, 3, 4, 5)
+    cout << Q0 - Q1 << endl; // >> (0, 1, 2, 3)
+```
 
 Some other classic functions are implemented to handle complex numbers such as `norm`, `re`, `im` ...
 Note that the initial object is **never** modified by the function itself. These functions always return 
 a result without modifying anything.
 Note that most of these functions have a static definition you can call directly from the class (Quat::Foo(Quat const & q) vs q.foo())
 
-![Complex](./images/complex.png)
+```cpp
+    /** Complex numbers functions **/
+    Q0 = Quat(1,2,3,4);
+    cout << Q0.norm2() << endl; // = norm² = 1² + 2² + 3² + 4² >> 30
+    cout << Q0.norm() << endl; // >> 5.47
+    cout << Q0.normalize() << endl; // (0.182574,0.365148,0.547723,0.730297)
+    cout << Q0.conj() << endl; // >> (1, -2, -3, -4)
+    cout << Q0.re() << endl; // >> 1
+    cout << Q0.im() << endl; // >> (2, 3, 4)
+
+    // Static methods
+    cout << Quat::norm2(Q0) << endl;
+    cout << Quat::norm(Q0) << endl;
+    // ...
+```
 
 ## Spatial rotations
 You can convert back and forth quaternions to Euler.
@@ -39,7 +92,35 @@ Keep in mind that a set of Euler angle **does not** make any sense unless you sp
 The default settings (and the most commonly used) is `ZYX`(yaw / pitch / roll) intrinsic expressed in radian.
 The sequence can be selected through the `Sequence` enum in `Quat` class.
 
-![EulerQuatConv](./images/rotation.png)
+```cpp
+    /** Spatial rotations **/
+    /* Euler <-> Quaternion conversions */
+    Q0 = Quat::unitQuat(M_PI_4, 1,1,0); // >> (cos(Pi/4/2), 0.27, 0.27, 0)
+    // Default settings (ZYX/radian/intrinsic)
+    Vector3D ypr = Q0.toEuler();
+    cout << ypr << endl; // >> (0.169918, 0.523599, 0.61548)
+    cout << Quat::fromEuler(ypr) << endl; // >> (cos(Pi/4/2), 0.27, 0.27, 0)
+    
+    // Optional arguments
+    Quat::Sequence seq = Quat::ZXZ;
+    bool isDegree = true;
+    bool isExtrinsic = true;
+    Vector3D euler = Q0.toEuler(seq,isDegree,isExtrinsic);
+    cout << euler << endl; // >> (-45, 45, 45)
+    cout << Quat::fromEuler(euler, seq, isDegree, isExtrinsic) << endl; // >> (cos(Pi/4/2), 0.27, 0.27, 0)
+    
+    /* 3D Rotation */
+    Vector3D ex(1,0,0),ey(0,1,0),ez(0,0,1);
+    Q0 = Quat::unitQuat(M_PI_2,0,1,0);
+    cout << Q0.rotateVector(ex) << endl; // >> (~0, 0, -1)
+    cout << Q0.rotateVector(ey) << endl; // >> (0, 1, 0)
+    cout << Q0.rotateVector(ez) << endl; // >> (1, 0, ~0)
+
+    Q0 = Quat::unitQuat(-M_PI_2,0,1,0);
+    cout << Q0.rotateVector(ex) << endl; // >> (~0, 0, 1)
+    cout << Q0.rotateVector(ey) << endl; // >> (0, 1, 0)
+    cout << Q0.rotateVector(ez) << endl; // >> (-1, 0, ~0)
+```
 # TODOs
 
 - Make ETL version of this library to be able to use it from a microcontroler (Planned on STM32)
