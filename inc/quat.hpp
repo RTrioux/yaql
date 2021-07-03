@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <map>
+#include <cmath>
 #include "vector3d.hpp"
 
 namespace yaql
@@ -83,8 +84,8 @@ class Quat
 
 /** "Static" functions **/
 
-static bool isEqual(Quat const & q1, Quat const & q2){ return q1.isEqual(q2); }
-static bool isNull(Quat const & q){ return q.isNull(); }
+inline bool isEqual(Quat const & q1, Quat const & q2){ return q1.isEqual(q2); }
+inline bool isNull(Quat const & q){ return q.isNull(); }
 inline Quat inverse(Quat const & q){ return q.inverse(); }
 inline Quat conj(Quat const & q){ return q.conj(); }
 inline Vector3D im(Quat const & q){ return q.im(); }
