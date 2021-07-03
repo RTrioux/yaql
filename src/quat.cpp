@@ -3,7 +3,8 @@
 #include <array>
 #include "quat.hpp"
 using namespace std;
-
+namespace yaql
+{
 
 Quat::Quat(double q0,double q1, double q2, double q3)
 {
@@ -59,10 +60,6 @@ bool Quat::isEqual(Quat const &q) const
     return true;
 }
 
-bool Quat::isEqual(Quat const & q1, Quat const & q2)
-{
-    return q1.isEqual(q2);
-}
 
 bool Quat::isNull() const
 {
@@ -76,10 +73,6 @@ bool Quat::isNull() const
     return true;
 }
 
-bool Quat::isNull(Quat const & q)
-{
-    return q.isNull();
-}
 
 /** Operators **/
 
@@ -110,14 +103,14 @@ Quat Quat::operator-() const
 
 Quat Quat::operator*(Quat const & q) const
 {
-    double q0 = m_arr[0] * q[0] - Vector3D::innerProd(m_im,q.m_im);
-    Vector3D im = m_arr[0] * q.m_im + q[0] * m_im + Vector3D::crossProd(m_im,q.m_im);
+    double q0 = m_arr[0] * q[0] - innerProd(m_im,q.m_im);
+    Vector3D im = m_arr[0] * q.m_im + q[0] * m_im + crossProd(m_im,q.m_im);
     return Quat(q0, im);
 }
 
 Quat Quat::operator/(Quat const & q) const
 {
-    return (*this) * inverse(q);
+    return (*this) * q.inverse();
 }
 
 Quat & Quat::operator+=(Quat const &q)
@@ -189,10 +182,6 @@ Quat Quat::inverse() const
     return 1.0/norm2()*conj();
 }
 
-Quat Quat::inverse(Quat const & q)
-{
-    return q.inverse();
-}
 
 Quat Quat::conj() const 
 {
@@ -204,30 +193,17 @@ Quat Quat::conj() const
     return Quat(arr);
 }
 
-Quat Quat::conj(Quat const & q)
-{
-    return q.conj();
-}
-
 Vector3D Quat::im() const
 {
     return m_im;
 }
 
-Vector3D Quat::im(Quat const & q)
-{
-    return q.im();
-}
 
 double Quat::re() const
 {
     return m_arr[0];
 }
 
-double Quat::re(Quat const & q)
-{
-    return q.re();
-}
 
 // Norms
 
@@ -241,30 +217,18 @@ double Quat::norm2() const
     return norm2;
 }
 
-double Quat::norm2(Quat const & q)
-{
-    return q.norm2();
-}
 
 double Quat::norm() const
 {
     return sqrt(norm2());
 }
 
-double Quat::norm(Quat const & q)
-{
-    return q.norm();
-}
 
 Quat Quat::normalize() const
 {
     return (*this) / norm();
 }
 
-Quat Quat::normalize(Quat const & q)
-{
-    return q.normalize();
-}
 
 
 /** Rotations **/
@@ -274,63 +238,21 @@ double Quat::getRotation() const
     return 2*acos(m_arr[0]);
 }
 
-double Quat::getRotation(Quat const & q)
-{
-    return q.getRotation();
-}
 
-// Unit quaternion
-
-Quat Quat::unitQuat(double angle, double x, double y, double z, bool degree)
-{
-    return unitQuat(angle, Vector3D(x,y,z));
-}
-
-Quat Quat::unitQuat(double angle, Vector3D im, bool degree)
-{
-    if(angle == 0)
-    {
-        return Quat(1,0,0,0);
-    }
-    else
-    {
-        if(degree)
-        {
-            angle *= 180.0 / M_PI;
-        }
-
-        double q0 = cos(angle/2);
-        // Change direction in case of negative angle
-        if(angle<0)
-        {
-            im = -im;
-        }
-        double lambda = sqrt((1 - q0*q0)/im.norm2());
-        return Quat(q0,lambda*im);
-    }
-}
 
 Vector3D Quat::rotateVector(Vector3D const & vec) const
 {
     Quat imQuat(0,vec[0],vec[1],vec[2]);
-    imQuat = (*this) * imQuat *  inverse(*this);
+    imQuat = (*this) * imQuat * (*this).inverse();
     return Vector3D(imQuat[1],imQuat[2],imQuat[3]);
 }
 
-Vector3D Quat::rotateVector(Quat const & q, Vector3D const & vec)
-{
-    return q.rotateVector(vec);
-}
 
 Vector3D Quat::rotateVector(double arr[3]) const
 {
     return this->rotateVector(Vector3D(arr[0],arr[1],arr[2]));
 }
 
-Vector3D Quat::rotateVector(Quat const & q, double arr[3])
-{
-    return q.rotateVector(arr);
-}
 
 /** Conversions **/
 
@@ -502,88 +424,7 @@ Vector3D Quat::toEuler(Sequence seq, bool degree, bool isExtrinsic) const
     return euler;
 }
 
-Vector3D Quat::toEuler(Quat const & q, Sequence seq, bool degree, bool isExtrinsic)
-{
-    return q.toEuler(seq, degree, isExtrinsic);
-}
 
-Quat Quat::fromEuler(array<double,3> euler, Sequence seq, bool degree, bool isExtrinsic)
-{
-    /** 
-     * https://handwiki.org/wiki/Rotation_formalisms_in_three_dimensions
-    **/
-    static map<Sequence, string> seq2str = {{XYX,"XYX"},{XYZ,"XYZ"},{XZX,"XZX"},{XZY,"XZY"},
-                                            {YXY,"YXY"},{YXZ,"YXZ"},{YZX,"YZX"},{YZY,"YZY"},
-                                            {ZXY,"ZXY"},{ZXZ,"ZXZ"},{ZYX,"ZYX"},{ZYZ,"ZYZ"}};
-
-    string strSeq = seq2str[seq];
-
-    if(degree)
-    {
-        for (size_t i = 0; i < 3; i++)
-        {
-            euler[i] *= M_PI/180.0;
-        }
-    }
-
-    if(isExtrinsic)
-    {
-        double temp = euler[0];
-        euler[0] = euler[2];
-        euler[2] = temp;
-    }
-
-    Quat Q[3];
-    Quat Qresult = Quat(1,0,0,0);
-    int i=0;
-    for(char c: strSeq)
-    {
-        switch (c)
-        {
-        case 'X':
-            Q[i] = Quat(cos(euler[i]/2),sin(euler[i]/2),0,0);
-        break;
-        case 'Y':
-            Q[i] = Quat(cos(euler[i]/2),0,sin(euler[i]/2),0);
-        break;
-        case 'Z':
-            Q[i] = Quat(cos(euler[i]/2),0,0,sin(euler[i]/2));
-        break;
-        }
-        /*
-        if(isExtrinsic)
-        {
-            Qresult = Q[i] * Qresult;
-        }
-        else
-        {
-            Qresult = Qresult * Q[i];
-        }
-        */
-        Qresult = Qresult * Q[i];
-        i++;
-    }
-
-    return Qresult;
-}
-
-Quat Quat::fromEuler(double euler[3], Sequence seq, bool degree, bool isExtrinsic)
-{
-    array<double,3> arr = {euler[0],euler[1],euler[2]};
-    return Quat::fromEuler(arr,seq, degree, isExtrinsic);
-}
-
-Quat Quat::fromEuler(double alpha, double beta, double gamma, Sequence seq, bool degree, bool isExtrinsic)
-{
-    array<double,3> arr = {alpha, beta, gamma};
-    return Quat::fromEuler(arr, seq, degree, isExtrinsic);
-}
-
-Quat Quat::fromEuler(Vector3D euler, Sequence seq, bool degree, bool isExtrinsic)
-{
-    array<double,3> arr = {euler[0],euler[1],euler[2]};
-    return Quat::fromEuler(arr, seq, degree, isExtrinsic);
-}
 /** Display **/
 
 void Quat::print() const
@@ -598,4 +439,6 @@ void Quat::print() const
         }
     }
     cout<<")"<<endl;
+}
+
 }

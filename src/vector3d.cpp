@@ -3,6 +3,8 @@
 
 using namespace std;
 
+namespace yaql
+{
 
 Vector3D::Vector3D(array<double,3> arr)
 {
@@ -42,10 +44,6 @@ bool Vector3D::isNull() const
     return true;
 }
 
-bool Vector3D::isNull(Vector3D const & vec)
-{
-    return vec.isNull();
-}
 
 bool Vector3D::isEqual(Vector3D const & vect) const
 {
@@ -59,10 +57,6 @@ bool Vector3D::isEqual(Vector3D const & vect) const
     return true;
 }
 
-bool Vector3D::isEqual(Vector3D const &A, Vector3D const &B)
-{
-    return A.isEqual(B);
-}
 
 
 /** Operators **/
@@ -97,6 +91,17 @@ Vector3D Vector3D::operator-() const
 }
 
 
+Vector3D & Vector3D::operator+=(Vector3D const & A)
+{
+    *this = *this + A;
+    return *this;
+}
+
+Vector3D & Vector3D::operator-=(Vector3D const & A)
+{
+    *this = *this - A;
+    return *this;
+}
 
 double & Vector3D::operator[](size_t index)
 {
@@ -134,30 +139,29 @@ ostream & operator<< (ostream & out, Vector3D const &vec)
 }
 
 /** Algebra **/
-
-Vector3D Vector3D::crossProd(Vector3D const & A,Vector3D const & B)
+Vector3D Vector3D::crossProd(Vector3D const & B) const
 {
     double arr[3];
     for (size_t i = 0; i < 3; i++)
     {
-        arr[(i+2)%3] = A.m_arr[i] * B.m_arr[(i+1)%3] - A.m_arr[(i+1)%3] * B.m_arr[i];
+        arr[(i+2)%3] = this->m_arr[i] * B.m_arr[(i+1)%3] - this->m_arr[(i+1)%3] * B.m_arr[i];
     }
     return Vector3D(arr);
 }
 
-double Vector3D::innerProd(Vector3D const & A, Vector3D const &B)
+double Vector3D::innerProd(Vector3D const & B) const
 {
     double innerProd=0;
     for (size_t i = 0; i < 3; i++)
     {
-        innerProd += A.m_arr[i] * B.m_arr[i];
+        innerProd += this->m_arr[i] * B.m_arr[i];
     }
     return innerProd;
 }
 
-double Vector3D::getAngle(Vector3D const & A, Vector3D const & B)
+double Vector3D::getAngle(Vector3D const & B) const
 {
-    return M_PI_2 - acos(innerProd(A,B)/(A.norm() * B.norm()));
+    return M_PI_2 - acos(this->innerProd(B)/(norm() * B.norm()));
 }
 
 Vector3D Vector3D::normalize() const
@@ -165,31 +169,16 @@ Vector3D Vector3D::normalize() const
     return (*this)/norm();
 }
 
-Vector3D Vector3D::normalize(Vector3D const  & vect)
-{
-    return vect.normalize();
-    vect.normalize();
-}
-
 double Vector3D::norm() const
 {
     return sqrt(norm2());
 }
 
-double Vector3D::norm(Vector3D const & vec)
-{
-    return vec.norm();
-}
-
 double Vector3D::norm2() const
 {
-    return innerProd(*this,*this);
+    return this->innerProd(*this);
 }
 
-double Vector3D::norm2(Vector3D const & vec)
-{
-    return  vec.norm2();
-}
 
 /** Display **/
 
@@ -205,4 +194,6 @@ void Vector3D::print() const
         }
     }
     cout<<")"<<endl;
+}
+
 }

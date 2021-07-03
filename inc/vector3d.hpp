@@ -3,6 +3,8 @@
 #include <iostream>
 #include <array>
 
+namespace yaql
+{
 class Vector3D
 {
     public:
@@ -14,14 +16,14 @@ class Vector3D
 
     /** Tests **/
     bool isNull() const;
-    static bool isNull(Vector3D const &); 
     bool isEqual(Vector3D const &) const;
-    static bool isEqual(Vector3D const &,Vector3D const &);
 
     /** Operators **/
     Vector3D operator+(Vector3D const &) const;
     Vector3D operator-(Vector3D const &) const;
     Vector3D operator-() const; // Negative vector
+    Vector3D &operator+=(Vector3D const &);
+    Vector3D &operator-=(Vector3D const &);
     bool operator!=(Vector3D const &) const;
     bool operator==(Vector3D const &) const;
     double &operator[](size_t index);
@@ -30,17 +32,14 @@ class Vector3D
 
 
     /** Algebra **/
-    static Vector3D crossProd(Vector3D const &,Vector3D const &);
-    static double innerProd(Vector3D const &, Vector3D const &);
+    Vector3D crossProd(Vector3D const &) const;
+    double innerProd(Vector3D const &) const;
+    double getAngle(Vector3D const &) const;
 
     // Calculate angle between two vectors in radian [-pi ; pi]
-    static double getAngle(Vector3D const &A, Vector3D const &B);
     Vector3D normalize() const;
-    static  Vector3D normalize(Vector3D const &);
     double norm() const;
-    static double norm(Vector3D const &);
     double norm2() const;
-    static double norm2(Vector3D const &);
 
     /** Display **/
     void print() const;
@@ -49,6 +48,16 @@ class Vector3D
     double m_arr[3];
 
 };
+
+/** "Static" methods **/
+inline bool isEqual(Vector3D const & v1,Vector3D const & v2){ return v1.isEqual(v2); }
+inline bool isNull(Vector3D const & v){ return v.isNull(); }
+inline Vector3D crossProd(Vector3D const & v1,Vector3D const & v2){ return v1.crossProd(v2); }
+inline double innerProd(Vector3D const & v1, Vector3D const & v2){ return v1.innerProd(v2); }
+inline double getAngle(Vector3D const & v1, Vector3D const & v2){ return v1.getAngle(v2); }
+inline  Vector3D normalize(Vector3D const & v){ return v.normalize(); }
+inline double norm(Vector3D const & v){ return v.norm(); }
+inline double norm2(Vector3D const & v){ return v.norm2(); }
 
 
 template<typename T> Vector3D operator/ (Vector3D const & vect, T const & scalar)
@@ -96,5 +105,6 @@ template <typename T> Vector3D operator*(Vector3D const & vect, T const & scalar
     return scalar * vect;
 }
 
+}
 
 #endif
