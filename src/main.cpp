@@ -78,15 +78,19 @@ int main()
     /* 3D Rotation */
     Vector3D ex(1,0,0),ey(0,1,0),ez(0,0,1);
     Q0 = unitQuat(M_PI_2,0,1,0);
-    cout << Q0.rotateVector(ex) << endl; // >> (~0, 0, -1)
-    cout << Q0.rotateVector(ey) << endl; // >> (0, 1, 0)
-    cout << Q0.rotateVector(ez) << endl; // >> (1, 0, ~0)
+    cout << Q0.rotate(ex) << endl; // >> (~0, 0, -1)
+    cout << Q0.rotate(ey) << endl; // >> (0, 1, 0)
+    cout << Q0.rotate(ez) << endl; // >> (1, 0, ~0)
 
     Q0 = unitQuat(-M_PI_2,0,1,0);
-    cout << Q0.rotateVector(ex) << endl; // >> (~0, 0, 1)
-    cout << Q0.rotateVector(ey) << endl; // >> (0, 1, 0)
-    cout << Q0.rotateVector(ez) << endl; // >> (-1, 0, ~0)
+    cout << Q0.rotate(ex) << endl; // >> (~0, 0, 1)
+    cout << Q0.rotate(ey) << endl; // >> (0, 1, 0)
+    cout << Q0.rotate(ez) << endl; // >> (-1, 0, ~0)
 
+    // Get the equivalent rotation from vector v1 to vector v2
+    Vector3D v1(0.5,1,100), v2(2,1,-50);
+    Q0 = getRotation(v1, v2);
+    cout << Q0 << "\t" << Q0.rotate(v1) * norm(v2) / norm(v1) << "\t" << (1/Q0).rotate(v2) * norm(v1)/norm(v2) << endl;
 
 
     /*

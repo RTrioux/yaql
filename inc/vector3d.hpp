@@ -2,7 +2,6 @@
 #define VECTOR3D_HPP
 #include <iostream>
 #include <array>
-
 namespace yaql
 {
 class Vector3D
