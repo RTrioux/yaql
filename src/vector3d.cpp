@@ -161,7 +161,7 @@ double Vector3D::innerProd(Vector3D const & B) const
 
 double Vector3D::getAngle(Vector3D const & B) const
 {
-    return M_PI_2 - acos(this->innerProd(B)/(norm() * B.norm()));
+    return acos(this->innerProd(B)/(norm() * B.norm()));
 }
 
 Vector3D Vector3D::normalize() const
